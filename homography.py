@@ -65,7 +65,10 @@ def plot_stitching(imA,imB,H):
     imC[_imA!=0]=_imA[_imA!=0]
     # print(shape_imC)
     plt.figure(figsize=(20,10))
-    plt.imshow(imC[...,::-1]/255)
+    if is_gray:
+        plt.imshow(imC, 'gray')
+    else:
+        plt.imshow(imC[...,::-1]/255)
 
 def main():
     # Read images
@@ -91,6 +94,7 @@ def main():
         print("Not enough matches are found")
         sys.exit(1)
     plot_matching(imA,kpsA,imB,kpsB,matches,inliers)
+    # plot_stitching(imA, imB, H)
     plot_stitching(cv2.imread("A.png"),cv2.imread("B1.png"),H)
     plt.show()
 
