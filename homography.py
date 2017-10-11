@@ -40,8 +40,9 @@ def plot_matching(imA,kpsA,imB,kpsB,matches,inliers):
     plt.imshow(im, 'gray')
 
 def plot_stitching(imA,imB,H):
+    is_gray = len(imA.shape)==2
     # Transform imA bounding box
-    h,w = imA.shape
+    h,w = imA.shape[:2]
     transformed_box = cv2.perspectiveTransform(np.float32([[0,0],[0,h-1],[w-1,h-1],[w-1,0]]).reshape(-1,1,2),H)
     # Find bounding box
     bounding_box = np.array([
@@ -54,17 +55,17 @@ def plot_stitching(imA,imB,H):
     shape_imC = np.ceil((bounding_box+translate_transform)[:,1]).astype(int)
     box_imB = (np.array([0, imB.shape[0]-1, 0, imB.shape[1]-1]).reshape((2,2))+translate_transform).astype(int)
     # Allocate new image
-    imC = np.zeros(shape_imC)
+    imC = np.zeros(shape_imC if is_gray else tuple(shape_imC)+(3,))
     # Copy imB onto imC
     imC[box_imB[0,0]:box_imB[0,0]+imB.shape[0],box_imB[1,0]:box_imB[1,0]+imB.shape[1]] = imB
     # Copy imA onto imC
     H = H.copy()
     H[:2,2] += np.squeeze(translate_transform)[::-1] # adjust translation to imC
-    _imA = cv2.warpPerspective(imA,H,imC.shape[::-1])
+    _imA = cv2.warpPerspective(imA,H,imC.shape[:2][::-1])
     imC[_imA!=0]=_imA[_imA!=0]
     # print(shape_imC)
     plt.figure(figsize=(20,10))
-    plt.imshow(imC, 'gray')
+    plt.imshow(imC[...,::-1]/255)
 
 def main():
     # Read images
@@ -90,7 +91,7 @@ def main():
         print("Not enough matches are found")
         sys.exit(1)
     plot_matching(imA,kpsA,imB,kpsB,matches,inliers)
-    plot_stitching(imA,imB,H)
+    plot_stitching(cv2.imread("A.png"),cv2.imread("B1.png"),H)
     plt.show()
 
 if __name__ == '__main__':
