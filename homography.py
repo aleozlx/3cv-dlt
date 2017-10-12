@@ -30,7 +30,11 @@ def homography(src, dst):
 #     H, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
 #     return H, mask.ravel().tolist()
 
-def plot_matching(imA,kpsA,imB,kpsB,matches,inliers):
+def plot_matching(imA,kpsA,imB,kpsB,matches,H,inliers):
+    imB = imB.copy()
+    h,w = imA.shape[:2]
+    transformed_box = cv2.perspectiveTransform(np.float32([[0,0],[0,h-1],[w-1,h-1],[w-1,0]]).reshape(-1,1,2),H)
+    cv2.polylines(imB,[np.int32(transformed_box)],True,255,3, cv2.LINE_AA)
     im = cv2.drawMatches(imA,kpsA,imB,kpsB,matches,None,
         matchColor = (0,255,0), # draw matches in green color
         singlePointColor = None,
@@ -93,7 +97,8 @@ def main():
     else:
         print("Not enough matches are found")
         sys.exit(1)
-    plot_matching(imA,kpsA,imB,kpsB,matches,inliers)
+    print(H, len(inliers))
+    # plot_matching(imA,kpsA,imB,kpsB,matches,H,inliers)
     # plot_stitching(imA, imB, H)
     plot_stitching(cv2.imread("A.png"),cv2.imread("B1.png"),H)
     plt.show()
